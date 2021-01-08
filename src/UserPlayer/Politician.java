@@ -1,6 +1,7 @@
 package UserPlayer;
 import battlecode.common.*;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.ArrayList;
 
 public class Politician extends Robot{
@@ -8,9 +9,15 @@ public class Politician extends Robot{
     Communications comms = new Communications();
     private MapLocation enlightenmentCenterLoc;
     private HashSet<MapLocation> defensePerimeter;
+    private boolean defender;
 
     public Politician(RobotController rc) {
         super(rc);
+        if((int) (Math.random() * 10) < 4){
+            this.defender = false;
+        }else{
+            this.defender = true;
+        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -31,13 +38,23 @@ public class Politician extends Robot{
             System.out.println("empowered");
             return;
         }
-        if(defensePerimeter.contains(rc.getLocation())){
-            return;
+
+        comms.useComms(rc);
+
+        if(defender){
+            if(defensePerimeter.contains(rc.getLocation())){
+            }else if(defensePerimeter != null){
+                goToDefensePerimeter();
+            }else{
+                System.out.println("I moved!");
+            }
+        }else {
+            if (comms.curClosestEC != 0){
+                nav.searchForEC(rc, comms);
+            }else{
+                nav.scout(rc);
+            }
         }
-        if(defensePerimeter != null)
-            goToDefensePerimeter();
-        else
-            System.out.println("I moved!");
     }
 
     private void storeCenterLoc(){
@@ -87,7 +104,7 @@ public class Politician extends Robot{
 
     private void goToDefensePerimeter() throws GameActionException{
         //Right now just goes to a random position in the defense perimeter
-        MapLocation[] perimeterLocs = defensePerimeter.toArray( new MapLocation[defensePerimeter.size()]);
+        MapLocation[] perimeterLocs = defensePerimeter.toArray(new MapLocation[defensePerimeter.size()]);
         
         MapLocation randomDest = perimeterLocs[(int) Math.random() * perimeterLocs.length];
         nav.simpleNav(rc, randomDest);

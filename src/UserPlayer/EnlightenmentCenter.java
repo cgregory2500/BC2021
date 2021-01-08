@@ -14,6 +14,7 @@ public class EnlightenmentCenter extends Robot{
 
         int bidAmount = setBidAmount();
         int leftoverInfluence = rc.getInfluence() - bidAmount;
+        //comms.useComms(rc);
         /*RobotType toBuild = Utils.randomSpawnableRobotType();
         int influence = 50;
         for (Direction dir : Utils.directions) {

@@ -8,9 +8,15 @@ public class Slanderer extends Robot{
     Communications comms = new Communications();
     private MapLocation enlightenmentCenterLoc;
     private HashSet<MapLocation> defensePerimeter;
+    private boolean defender;
 
     public Slanderer(RobotController rc) {
         super(rc);
+        if((int) (Math.random() * 10) < 4){
+            this.defender = false;
+        }else{
+            this.defender = true;
+        }
     }
 
     public void takeTurn() throws GameActionException{
@@ -21,6 +27,8 @@ public class Slanderer extends Robot{
 
         if (enlightenmentCenterLoc != null)
             defensePerimeter = calculateDefensePerimeter(enlightenmentCenterLoc);
+
+        comms.useComms(rc);
         
         if(turnCount >= 300){
             Team enemy = rc.getTeam().opponent();
@@ -32,13 +40,20 @@ public class Slanderer extends Robot{
                 System.out.println("empowered");
                 return;
             }
-            if(defensePerimeter.contains(rc.getLocation())){
-                return;
+            if(defender){
+                if(defensePerimeter.contains(rc.getLocation())){
+                }else if(defensePerimeter != null){
+                    goToDefensePerimeter();
+                }else{
+                    System.out.println("I moved!");
+                }
+            }else {
+                if (comms.curClosestEC != 0){
+                    nav.searchForEC(rc, comms);
+                }else{
+                    nav.scout(rc);
+                }
             }
-            if(defensePerimeter != null)
-                goToDefensePerimeter();
-            else
-                System.out.println("Moved in random Direction");
         }else{
             nav.scout(rc);
         }

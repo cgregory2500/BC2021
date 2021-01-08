@@ -23,6 +23,11 @@ public class Muckraker extends Robot{
                 }
             }
         }
-        nav.scout(rc);
+        comms.useComms(rc);
+        if (comms.curClosestEC != 0){
+            nav.searchForEC(rc, comms);
+        }else{
+            nav.scout(rc);
+        }
     }
 }

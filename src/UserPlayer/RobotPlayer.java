@@ -37,7 +37,6 @@ public strictfp class RobotPlayer {
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You may rewrite this into your own control structure if you wish.
-        System.out.println("I'm a " + rc.getType() + "! Location " + rc.getLocation());
         switch (rc.getType()) {
             case ENLIGHTENMENT_CENTER: me = new EnlightenmentCenter(rc); break;
             case POLITICIAN:           me = new Politician(rc);          break;
@@ -45,7 +44,6 @@ public strictfp class RobotPlayer {
             case MUCKRAKER:            me = new Muckraker(rc);           break;
         }
 
-        System.out.println("I'm a " + rc.getType() + " and I just got created!");
         while (true) {
             try {
                 me.takeTurn();

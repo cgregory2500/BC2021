@@ -7,9 +7,10 @@ import java.util.ArrayList;
 public class Navigation {
     HashMap<int[], Float> locPassabilities = new HashMap<int[], Float>();
     Direction prevScoutDir;
+    Direction lastLineScan;
 
     public Navigation(){
-
+        this.lastLineScan = Direction.NORTH;
     }
 
     public void navigate(RobotController r) throws GameActionException {
@@ -43,14 +44,7 @@ public class Navigation {
             }
         }
 
-        //tries to move in the shortest manhattan distance of the system
-        if (Utils.tryMove(bestDir, r))
-            System.out.println("Moved in optimal direction according to Simple Nav!");
-
-
-        //moves in random direction if cannot move in optimal direction
-        if (Utils.tryMove(Utils.randomDirection(), r))
-            System.out.println("Moved in random Direction");
+        tryMoveDirection(r, bestDir);
     }
     
     public void scout(RobotController r) throws GameActionException{
@@ -70,5 +64,56 @@ public class Navigation {
 
         if(Utils.tryMove(Utils.randomDirection(), r))
             System.out.println("Moved in random Direction");
+            
     }
+
+    public void searchForEC(RobotController rc, Communications comms) throws GameActionException{
+        MapLocation curLoc = rc.getLocation();
+
+        if(curLoc.x < comms.curClosestEC){
+            if(tryMoveDirection(rc, Direction.EAST)){
+                return ;
+            } else if (tryMoveDirection(rc, Direction.NORTHEAST)){
+                return;
+            } else{
+                tryMoveDirection(rc, Direction.SOUTHEAST);
+                return;
+            }
+        } else if (curLoc.x > comms.curClosestEC){
+            if(tryMoveDirection(rc, Direction.WEST)){
+                return ;
+            } else if (tryMoveDirection(rc, Direction.NORTHWEST)){
+                return;
+            } else{
+                tryMoveDirection(rc, Direction.SOUTHWEST);
+                return;
+            }
+        } else {
+            if(tryMoveDirection(rc, lastLineScan)){
+                return;
+            } else {
+                lastLineScan = lastLineScan.opposite();
+                tryMoveDirection(rc, lastLineScan);
+                return;
+            }
+        }
+
+    }
+
+    public boolean tryMoveDirection(RobotController r, Direction dir) throws GameActionException{
+        //tries to move in the shortest manhattan distance of the system
+        if (Utils.tryMove(dir, r)){
+            System.out.println("Moved in optimal direction according to Simple Nav!");
+            return true;
+        }
+
+
+        //moves in random direction if cannot move in optimal direction
+        if (Utils.tryMove(Utils.randomDirection(), r)){
+            System.out.println("Moved in random Direction");
+            return false;
+        }
+        return false;
+    }
+
 }
