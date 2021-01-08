@@ -2,6 +2,8 @@ package UserPlayer;
 import battlecode.common.*;
 
 public class Muckraker extends Robot{
+    Navigation nav = new Navigation();
+    Communications comms = new Communications();
 
     public Muckraker(RobotController rc) {
         super(rc);
@@ -16,13 +18,11 @@ public class Muckraker extends Robot{
             if (robot.type.canBeExposed()) {
                 // It's a slanderer... go get them!
                 if (rc.canExpose(robot.location)) {
-                    System.out.println("e x p o s e d");
                     rc.expose(robot.location);
                     return;
                 }
             }
         }
-        if (Utils.tryMove(Utils.randomDirection(), rc))
-            System.out.println("I moved!");
+        nav.scout(rc);
     }
 }

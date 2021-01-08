@@ -1,7 +1,9 @@
 package UserPlayer;
 import battlecode.common.*;
+import java.lang.String;
 
 public class EnlightenmentCenter extends Robot{
+    Communications comms = new Communications();
 
     public EnlightenmentCenter(RobotController r){
         super(r);
@@ -10,16 +12,91 @@ public class EnlightenmentCenter extends Robot{
     public void takeTurn() throws GameActionException {
         super.takeTurn();
 
-        RobotType toBuild = Utils.randomSpawnableRobotType();
-        System.out.println("here  2222222222222222222222");
+        int bidAmount = setBidAmount();
+        int leftoverInfluence = rc.getInfluence() - bidAmount;
+        /*RobotType toBuild = Utils.randomSpawnableRobotType();
         int influence = 50;
-        System.out.println(rc);
         for (Direction dir : Utils.directions) {
-            System.out.println("here  3333333333333333333333333333");
             if (rc.canBuildRobot(toBuild, dir, influence)) {
                 rc.buildRobot(toBuild, dir, influence);
-                System.out.println("here 111111111111");
             } else {
+                break;
+            }
+        }*/
+        buildRobots(leftoverInfluence);
+        rc.bid(bidAmount);
+        System.out.println("just bid: " +  bidAmount);
+    }
+
+    private int setBidAmount(){
+        int totalInfluence = rc.getInfluence();
+        int roundNum = rc.getRoundNum();
+        int curVotes = rc.getTeamVotes();
+
+        if (curVotes > 1500){
+            return 0;
+        }
+
+        if(roundNum < 150){
+            if ((int) roundNum/2 > curVotes){
+                return 1;
+            }else {
+                return 1;
+            }
+        }
+        return 1;
+    }
+
+    private void buildRobots(int leftInf) throws GameActionException{
+        int roundNum = rc.getRoundNum();
+        int curVotes = rc.getTeamVotes();
+        int epsilon = (int) (Math.random() * 100);
+        System.out.println("epsilon:" + epsilon);
+
+        if(curVotes > 1500){
+            //survival stages
+            if(epsilon < 50){
+                constructRobot((int) leftInf/10, RobotType.POLITICIAN);
+            }else{
+                constructRobot((int) leftInf/10, RobotType.MUCKRAKER);
+            }
+        }else {
+            //growth stages 
+            if(roundNum < 150){
+                //early game builds
+                if(epsilon < 30){
+                    constructRobot((int) leftInf/10, RobotType.SLANDERER);
+                }else if (epsilon < 75){
+                    constructRobot((int) leftInf/10, RobotType.POLITICIAN);
+                } else{
+                    constructRobot((int) leftInf/10, RobotType.MUCKRAKER);
+                }
+            }else if (roundNum < 1750){
+                //mid game builds
+                if(epsilon < 50){
+                    constructRobot((int) leftInf/10, RobotType.POLITICIAN);
+                }else if (epsilon < 70){
+                    constructRobot((int) leftInf/10, RobotType.SLANDERER);
+                } else{
+                    constructRobot((int) leftInf/10, RobotType.MUCKRAKER);
+                }
+            }else{
+                //late game builds
+                if(epsilon < 50){
+                    constructRobot((int) leftInf/10, RobotType.MUCKRAKER);
+                }else if (epsilon < 80){
+                    constructRobot((int) leftInf/10, RobotType.POLITICIAN);
+                } else{
+                    constructRobot((int) leftInf/10, RobotType.SLANDERER);
+                }
+            }
+        }
+    }
+
+    private void constructRobot(int inf, RobotType type) throws GameActionException{
+        for (Direction dir : Utils.directions){
+            if(rc.canBuildRobot(type, dir, inf)){
+                rc.buildRobot(type, dir, inf);
                 break;
             }
         }

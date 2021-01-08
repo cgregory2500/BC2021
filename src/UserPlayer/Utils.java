@@ -45,7 +45,6 @@ public class Utils {
      * @throws GameActionException
      */
     public static boolean tryMove(Direction dir, RobotController rc) throws GameActionException {
-        System.out.println("I am trying to move " + dir + "; " + rc.isReady() + " " + rc.getCooldownTurns() + " " + rc.canMove(dir));
         if (rc.canMove(dir)) {
             rc.move(dir);
             return true;
