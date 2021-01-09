@@ -1,12 +1,33 @@
 package UserPlayer;
 import battlecode.common.*;
 import java.lang.String;
+import java.util.HashMap;
+import java.lang.Integer;
 
 public class EnlightenmentCenter extends Robot{
     Communications comms = new Communications();
+    private boolean closeNeutralEC;
+
+    // maps buildThreshholds maps round numbers to influence threshholds for building a new bot
+    private HashMap<Integer, Integer> buildThreshholds = new HashMap<Integer, Integer>(); 
 
     public EnlightenmentCenter(RobotController r){
         super(r);
+        closeNeutralEC = false;
+
+        for(int i = 0; i < 3000; i++){
+            if(i < 150){
+                buildThreshholds.put(i, 150);
+            }else if (i < 500){
+                buildThreshholds.put(i, 500);
+            } else if (i < 1000){
+                buildThreshholds.put(i, 500);
+            } else if (i < 2000){
+                buildThreshholds.put(i, 1000);
+            }else{
+                buildThreshholds.put(i, 1000);
+            }
+        }
     }
 
     public void takeTurn() throws GameActionException {
@@ -14,7 +35,7 @@ public class EnlightenmentCenter extends Robot{
 
         int bidAmount = setBidAmount();
         int leftoverInfluence = rc.getInfluence() - bidAmount;
-        //comms.useComms(rc);
+        comms.useComms(rc);
         /*RobotType toBuild = Utils.randomSpawnableRobotType();
         int influence = 50;
         for (Direction dir : Utils.directions) {
@@ -24,7 +45,9 @@ public class EnlightenmentCenter extends Robot{
                 break;
             }
         }*/
-        buildRobots(leftoverInfluence);
+        if (buildThreshholds.get(rc.getRoundNum()) < rc.getInfluence()){
+            buildRobots(leftoverInfluence);
+        }
         rc.bid(bidAmount);
         System.out.println("just bid: " +  bidAmount);
     }

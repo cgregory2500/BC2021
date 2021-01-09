@@ -7,9 +7,10 @@ import java.util.ArrayList;
 public class Politician extends Robot{
     Navigation nav = new Navigation();
     Communications comms = new Communications();
-    private MapLocation enlightenmentCenterLoc;
+    public MapLocation enlightenmentCenterLoc;
     private HashSet<MapLocation> defensePerimeter;
     private boolean defender;
+    public MapLocation ec;
 
     public Politician(RobotController rc) {
         super(rc);
@@ -29,19 +30,31 @@ public class Politician extends Robot{
         if (enlightenmentCenterLoc != null)
             defensePerimeter = calculateDefensePerimeter(enlightenmentCenterLoc);
 
-        Team enemy = rc.getTeam().opponent();
-        int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
-        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
-            System.out.println("empowering...");
-            rc.empower(actionRadius);
-            System.out.println("empowered");
+        comms.useComms(rc);
+
+        if(comms.discoveredEC){
+            comms.reportBack(rc, nav, enlightenmentCenterLoc);
             return;
         }
 
-        comms.useComms(rc);
+        Team enemy = rc.getTeam().opponent();
+        int actionRadius = rc.getType().actionRadiusSquared;
+        RobotInfo[] captureable = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
 
-        if(defender){
+        if(captureable.length != 0 && rc.canEmpower(actionRadius)){
+            rc.empower(actionRadius);
+            return;
+        }
+
+        RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
+        if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
+            rc.empower(actionRadius);
+            return;
+        }
+
+        if (comms.rushing){
+            nav.searchForEC(rc, comms);
+        }else if(defender){
             if(defensePerimeter.contains(rc.getLocation())){
             }else if(defensePerimeter != null){
                 goToDefensePerimeter();
@@ -49,7 +62,9 @@ public class Politician extends Robot{
                 System.out.println("I moved!");
             }
         }else {
-            if (comms.curClosestEC != 0){
+            if(comms.discoveredEC && enlightenmentCenterLoc != null){
+                comms.reportBack(rc, nav, ec);
+            } else if (comms.curClosestEC != 0){
                 nav.searchForEC(rc, comms);
             }else{
                 nav.scout(rc);
@@ -57,10 +72,11 @@ public class Politician extends Robot{
         }
     }
 
-    private void storeCenterLoc(){
+    public void storeCenterLoc(){
         for(RobotInfo r : rc.senseNearbyRobots()){
             if (r.type == RobotType.ENLIGHTENMENT_CENTER && r.team == rc.getTeam()){
                 enlightenmentCenterLoc = r.location;
+                ec = r.location;
                 break;
             }
         }

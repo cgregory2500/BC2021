@@ -1,5 +1,6 @@
 package UserPlayer;
 import battlecode.common.*;
+import java.util.HashSet;
 
 public class Robot {
     RobotController rc;
