@@ -76,8 +76,8 @@ public class Navigation {
         return adjacencyMatrix;
     }
 
-    public DijkPair extractMin(HashMap<MapLocation, Double> q){
-        MapLocation nextEdge; 
+    public DijkPair extractMin(HashMap<MapLocation, Double> q, RobotController rc){
+        MapLocation nextEdge = rc.getLocation(); 
         Double minVal = Double.NEGATIVE_INFINITY;
 
         for(MapLocation k: q.keySet()){
@@ -94,7 +94,7 @@ public class Navigation {
         MapLocation lastPlace = dest;
         MapLocation nextPlace = dest;
 
-        while(parents.nextPlace != null){
+        while(parents.get(nextPlace) != null){
             lastPlace = nextPlace;
             nextPlace = parents.get(nextPlace);
         }

@@ -61,14 +61,14 @@ public class EnlightenmentCenter extends Robot{
             return 0;
         }
 
-        if(roundNum < 150){
+        if(roundNum < 250){
             if ((int) roundNum/2 > curVotes){
-                return 1;
+                return 3;
             }else {
-                return 1;
+                return 3;
             }
         }
-        return 1;
+        return 3;
     }
 
     private void buildRobots(int leftInf) throws GameActionException{
