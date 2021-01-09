@@ -34,6 +34,7 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         //UserPlayer.RobotPlayer.rc = rc;
         Robot me = null;
+        Utils.buildHashMapDependencies();
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You may rewrite this into your own control structure if you wish.

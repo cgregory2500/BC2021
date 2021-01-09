@@ -1,7 +1,18 @@
 package UserPlayer;
 import battlecode.common.*;
+import java.lang.Double;
+import java.util.HashMap;
 
 public class Utils {
+    public static HashMap<RobotType, Double> baseCooldown = new HashMap<RobotType, Double>();
+
+    public static void buildHashMapDependencies(){
+        baseCooldown.put(RobotType.POLITICIAN, 1.0);
+        baseCooldown.put(RobotType.ENLIGHTENMENT_CENTER, 2.0);
+        baseCooldown.put(RobotType.SLANDERER, 1.5);
+        baseCooldown.put(RobotType.MUCKRAKER, 2.0);
+    }
+
     public static final RobotType[] spawnableRobot = {
             RobotType.POLITICIAN,
             RobotType.SLANDERER,
