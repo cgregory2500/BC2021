@@ -169,16 +169,17 @@ public class Navigation {
 
     public void simpleNav(RobotController r, MapLocation dest) throws GameActionException {
         MapLocation origin = r.getLocation();
-        int minDist = 100000000;
+        /*int minDist = 100000000;
         Direction bestDir = Direction.CENTER;
         for(Direction d: Utils.directions){
             if(manhattanDistance(origin.add(d), dest) < minDist){
                 bestDir = d;
                 minDist = manhattanDistance(origin.add(d), dest);
             }
-        }
+        }*/
 
-        tryMoveDirection(r, bestDir);
+        tryMoveDirection(r, origin.directionTo(dest));
+        System.out.println("Moved towards " + dest.x + " , " + dest.y);
     }
     
     public void scout(RobotController r) throws GameActionException{
@@ -186,10 +187,15 @@ public class Navigation {
             prevScoutDir = Utils.randomDirection();
         }
 
-        int epsilon = (int) (Math.random() * 10);
+        /*int epsilon = (int) (Math.random() * 10);
 
-        if(epsilon < 1)
+        if(!r.canMove(prevScoutDir)){
             prevScoutDir = Utils.randomDirection();
+        }*/
+
+        if(!r.onTheMap(r.getLocation().add(prevScoutDir)) || r.isLocationOccupied(r.getLocation().add(prevScoutDir))){
+            prevScoutDir = Utils.randomDirection();
+        }
 
         if(Utils.tryMove(prevScoutDir, r)){
             System.out.println("Moved in Scouting Direction");
@@ -238,6 +244,10 @@ public class Navigation {
         //tries to move in the shortest manhattan distance of the system
         if (Utils.tryMove(dir, r)){
             System.out.println("Moved in optimal direction according to Simple Nav!");
+            return true;
+        } else if (Utils.tryMove(dir.rotateRight(), r)){
+            return true;
+        } else if (Utils.tryMove(dir.rotateLeft(), r)){
             return true;
         }
 

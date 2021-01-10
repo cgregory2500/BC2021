@@ -6,11 +6,19 @@ import java.lang.String;
 import java.util.HashSet;
 
 public class Communications{
+    //Old Communication Dependencies
     public int curClosestEC = 0;
     public boolean discoveredEC;
     public boolean closestECNeutral;
     public HashSet<Integer> knownECs = new HashSet<Integer>();
     public boolean rushing;
+
+    //new Communication Dependencies
+    public MapLocation curEC;
+    public HashSet<Integer> possXs = new HashSet<Integer>();
+    public HashSet<Integer> possYs = new HashSet<Integer>();
+    public HashSet<MapLocation> neutrals = new HashSet<MapLocation>();
+    public ArrayList<MapLocation> possECs = new ArrayList<MapLocation>();
 
     public Communications(){
         this.discoveredEC = false;
@@ -20,7 +28,13 @@ public class Communications{
     public void useComms(RobotController rc) throws GameActionException{
         closerEnemyEC(rc);
         System.out.println("Reading messages works");
-        if (curClosestEC != 0){
+        evaluatePossLocs(rc);
+        if(possECs.size() > 0){
+            curEC = closestPossEC(rc);
+        }
+
+        //old code
+        if (curEC != null){
             sendCoordsOfEnemyEC(rc);
         }
     }
@@ -30,16 +44,23 @@ public class Communications{
         int[] robotIDs = new int[robots.length];
         for (int i = 0; i < robots.length; i++){
             robotIDs[i] = robots[i].ID;
-            if(robots[i].type == RobotType.ENLIGHTENMENT_CENTER && robots[i].team != rc.getTeam() && curClosestEC != robots[i].location.x){
-                curClosestEC = robots[i].location.x;
-                if(knownECs.contains(robots[i].location.x)){
+            if(robots[i].type == RobotType.ENLIGHTENMENT_CENTER && robots[i].team != rc.getTeam()){
+                if(possECs.contains(robots[i].location)){
                     discoveredEC = false;
+                    if (robots[i].team == Team.NEUTRAL){
+                        neutrals.add(robots[i].location);
+                        closestECNeutral = true;
+                    }else {
+                        closestECNeutral = false;
+                    }
                 } else {
                     discoveredEC = true;
-                    knownECs.add(robots[i].location.x);
+                    possECs.add(robots[i].location);
+                    curEC = robots[i].location;
                     if (robots[i].team == Team.NEUTRAL){
+                        neutrals.add(robots[i].location);
                         closestECNeutral = true;
-                    }else{
+                    } else {
                         closestECNeutral = false;
                     }
                 }
@@ -58,7 +79,9 @@ public class Communications{
 
     public void closerEnemyEC(RobotController rc) throws GameActionException{
         ArrayList<Integer> messages = readFlagsAndScanForEnemyEC(rc);
-        int distToCurEC;
+
+        //old code
+        /*int distToCurEC;
         int curX = rc.getLocation().x;
         int minDist;
         if(curClosestEC > 0){
@@ -66,9 +89,13 @@ public class Communications{
         }else{
             minDist = 100;
         }
-        String tag = "10101";
+        String tag = "10101";*/
+
         for(Integer m: messages){
-            String binString = Integer.toBinaryString(m);
+            decodeMessage(m, rc);
+
+            // old code 
+            /*String binString = Integer.toBinaryString(m);
             if(binString.length() > 5){
                 if(binString.substring(0, 4) == tag){
                     int xFromMessage = Integer.parseUnsignedInt(binString.substring(8,23), 2);
@@ -91,6 +118,21 @@ public class Communications{
                         }
                     }
                 } 
+            }*/
+        }
+    }
+
+    public void decodeMessage(int message, RobotController rc){
+        String binString = Integer.toBinaryString(message);
+
+        if(binString.length() > 5  && binString.substring(0, 4) == "10101"){
+            switch(binString.substring(5, 7)){
+                case "010": if (rc.getType() != RobotType.MUCKRAKER) possXs.add(Integer.parseUnsignedInt(binString.substring(8, 23)));
+                case "000": possXs.add(Integer.parseUnsignedInt(binString.substring(8, 23)));
+                case "110": possXs.add(Integer.parseUnsignedInt(binString.substring(8, 23))); discoveredEC = true;
+                case "011": if (rc.getType() != RobotType.MUCKRAKER) possYs.add(Integer.parseUnsignedInt(binString.substring(8, 23)));
+                case "001": possYs.add(Integer.parseUnsignedInt(binString.substring(8, 23)));
+                case "101": possYs.add(Integer.parseUnsignedInt(binString.substring(8, 23))); discoveredEC = true;
             }
         }
     }
@@ -102,14 +144,44 @@ public class Communications{
         }
     }
 
-    public int encodeEnemyEC(RobotController r) {
-        if(r.getType() ==  RobotType.ENLIGHTENMENT_CENTER && r.getInfluence() > 250){
-            return Integer.parseUnsignedInt("10101111" + Integer.toBinaryString(curClosestEC), 2);
-        }else if (closestECNeutral){
-            return Integer.parseUnsignedInt("10101010" + Integer.toBinaryString(curClosestEC), 2);
+    public int encodeEnemyEC(RobotController rc) {
+
+        String middleMessage = middleString(rc);
+        String endMessage = endMessage(rc);
+        String message = "10101" + middleMessage + endMessage;
+
+        return Integer.parseUnsignedInt(message, 2);
+    }
+
+    public String middleString(RobotController rc){
+        int round = rc.getRoundNum();
+
+        if(round % 2 == 1){
+            if(closestECNeutral){
+                return "010";
+            }else{
+                return "000";
+            }
         } else {
-            return Integer.parseUnsignedInt("10101000" + Integer.toBinaryString(curClosestEC), 2);
+            if(closestECNeutral){
+                return "011";
+            }else{
+                return "001";
+            }
         }
+    }
+
+    public String endMessage(RobotController rc){
+        int round = rc.getRoundNum();
+        int coord;
+
+        if (round % 2 == 1){
+            coord = curEC.x;
+        } else {
+            coord = curEC.y;
+        }
+
+        return Integer.toBinaryString(coord);
     }
 
     public void reportBack(RobotController rc, Navigation nav, MapLocation EC) throws GameActionException{
@@ -119,6 +191,49 @@ public class Communications{
             discoveredEC = false;
             nav.scout(rc);
         }
+    }
+
+    public void evaluatePossLocs(RobotController rc){
+        for(int x: possXs){
+            for(int y: possYs){
+                MapLocation newLoc = new MapLocation(x, y);
+                if(!inPossECs(newLoc)){
+                    if(rc.getType() == RobotType.MUCKRAKER && !neutrals.contains(newLoc)){
+                        continue;
+                    } else {
+                        possECs.add(newLoc);
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean inPossECs(MapLocation loc){
+        for(MapLocation pec: possECs){
+            if (loc.equals(pec)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public MapLocation closestPossEC(RobotController rc){
+        MapLocation curLoc = rc.getLocation();
+        int minDist = 10000;
+        MapLocation bestLoc = rc.getLocation();
+
+        for(MapLocation pec: possECs){
+            if(minDist > curLoc.distanceSquaredTo(pec)){
+                bestLoc = pec;
+                minDist = curLoc.distanceSquaredTo(pec);
+            }
+        }
+
+        return bestLoc;
+    }
+
+    public void goToClosestEC(RobotController rc, Navigation nav) throws GameActionException{
+        nav.simpleNav(rc, curEC);
     }
 
 }

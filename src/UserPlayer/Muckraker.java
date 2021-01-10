@@ -29,13 +29,20 @@ public class Muckraker extends Robot{
             }
         }
         comms.useComms(rc);
-        if(comms.discoveredEC && enlightenmentCenterLoc != null){
+
+        if (comms.curEC != null && !comms.neutrals.contains(comms.curEC)){
+            comms.goToClosestEC(rc, nav);
+        }else{
+            nav.scout(rc);
+        } 
+
+        /*if(comms.discoveredEC && enlightenmentCenterLoc != null){
             comms.reportBack(rc, nav, ec);
         }else if (comms.curClosestEC != 0 && !comms.closestECNeutral){
             nav.searchForEC(rc, comms);
         }else{
             nav.scout(rc);
-        }
+        }*/
     }
 
     public void storeCenterLoc(){

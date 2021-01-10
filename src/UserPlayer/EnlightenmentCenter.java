@@ -6,28 +6,41 @@ import java.lang.Integer;
 
 public class EnlightenmentCenter extends Robot{
     Communications comms = new Communications();
+    Navigation nav = new Navigation();
     private boolean closeNeutralEC;
+    private int muckrakersMade;
+
 
     // maps buildThreshholds maps round numbers to influence threshholds for building a new bot
     private HashMap<Integer, Integer> buildThreshholds = new HashMap<Integer, Integer>(); 
 
+    // maps max number of muckrakers to roundnum
+    private HashMap<Integer, Integer> muckrakerBound = new HashMap<Integer, Integer>();
+
+
     public EnlightenmentCenter(RobotController r){
         super(r);
         closeNeutralEC = false;
+        muckrakersMade = 0;
 
-        for(int i = 0; i < 3000; i++){
+        /*for(int i = 0; i < 3000; i++){
             if(i < 150){
                 buildThreshholds.put(i, 150);
+                muckrakerBound.put(i, 300);
             }else if (i < 500){
                 buildThreshholds.put(i, 500);
+                muckrakerBound.put(i, 500);
             } else if (i < 1000){
                 buildThreshholds.put(i, 500);
+                muckrakerBound.put(i, 500);
             } else if (i < 2000){
                 buildThreshholds.put(i, 1000);
+                muckrakerBound.put(i, 2000);
             }else{
                 buildThreshholds.put(i, 1000);
+                muckrakerBound.put(i, 2000);
             }
-        }
+        }*/
     }
 
     public void takeTurn() throws GameActionException {
@@ -45,10 +58,10 @@ public class EnlightenmentCenter extends Robot{
                 break;
             }
         }*/
-        if (buildThreshholds.get(rc.getRoundNum()) < rc.getInfluence()){
-            buildRobots(leftoverInfluence);
+        rush();
+        if(rc.getTeamVotes() < 1501){
+            rc.bid(3);
         }
-        rc.bid(bidAmount);
         System.out.println("just bid: " +  bidAmount);
     }
 
@@ -69,6 +82,22 @@ public class EnlightenmentCenter extends Robot{
             }
         }
         return 3;
+    }
+
+    private void rush() throws GameActionException{
+        //int randVal = (int) (Math.random() * 10);
+
+        if (rc.getRoundNum() > 150 && rc.getInfluence() > 400){
+            constructRobot(rc.getInfluence()/4, RobotType.POLITICIAN);
+        }
+
+        if(rc.getRoundNum() % 10 == 0){
+            constructRobot(rc.getInfluence()/4, RobotType.SLANDERER);
+        }
+
+        for (Direction d: Utils.directions){
+            constructRobot(1, RobotType.MUCKRAKER);
+        }
     }
 
     private void buildRobots(int leftInf) throws GameActionException{
@@ -120,6 +149,9 @@ public class EnlightenmentCenter extends Robot{
     private void constructRobot(int inf, RobotType type) throws GameActionException{
         for (Direction dir : Utils.directions){
             if(rc.canBuildRobot(type, dir, inf)){
+                if(type == RobotType.MUCKRAKER){
+                    muckrakersMade++;
+                }
                 rc.buildRobot(type, dir, inf);
                 break;
             }

@@ -39,22 +39,37 @@ public class Politician extends Robot{
 
         Team enemy = rc.getTeam().opponent();
         int actionRadius = rc.getType().actionRadiusSquared;
-        RobotInfo[] captureable = rc.senseNearbyRobots(actionRadius, Team.NEUTRAL);
+        RobotInfo[] usable = rc.senseNearbyRobots(actionRadius);
 
-        if(captureable.length != 0 && rc.canEmpower(actionRadius)){
+        //only attack ECs
+        if(rc.canEmpower(actionRadius)){
+            for(RobotInfo r: usable){
+                if(r.team != rc.getTeam() && r.type == RobotType.ENLIGHTENMENT_CENTER){
+                    rc.empower(actionRadius);
+                    return;
+                }
+            }
+        }
+
+        // attack any nearby enemy
+        /*if(captureable.length != 0 && rc.canEmpower(actionRadius)){
             rc.empower(actionRadius);
             return;
         }
-
+        
         RobotInfo[] attackable = rc.senseNearbyRobots(actionRadius, enemy);
         if (attackable.length != 0 && rc.canEmpower(actionRadius)) {
             rc.empower(actionRadius);
             return;
-        }
+        }*/
 
-        if (comms.rushing){
-            nav.searchForEC(rc, comms);
-        }else if(defender){
+        if (comms.curEC != null){
+            comms.goToClosestEC(rc, nav);
+        }else{
+            nav.scout(rc);
+        } 
+        
+        /*if(defender){
             if(defensePerimeter.contains(rc.getLocation())){
             }else if(defensePerimeter != null){
                 goToDefensePerimeter();
@@ -69,7 +84,7 @@ public class Politician extends Robot{
             }else{
                 nav.scout(rc);
             }
-        }
+        }*/
     }
 
     public void storeCenterLoc(){

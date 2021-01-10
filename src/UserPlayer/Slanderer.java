@@ -43,7 +43,14 @@ public class Slanderer extends Robot{
                 rc.empower(actionRadius);
                 return;
             }
-            if(comms.rushing){
+
+            if (comms.curEC != null){
+                comms.goToClosestEC(rc, nav);
+            }else{
+                nav.scout(rc);
+            } 
+
+            /*if(comms.rushing){
                 nav.searchForEC(rc, comms);
             }else if(defender){
                 if(defensePerimeter.contains(rc.getLocation())){
@@ -60,7 +67,7 @@ public class Slanderer extends Robot{
                 }else{
                     nav.scout(rc);
                 }
-            }
+            }*/
         }else{
             if(comms.discoveredEC && enlightenmentCenterLoc != null){
                 comms.reportBack(rc, nav, ec);
